@@ -12,7 +12,7 @@ function get() {
 }
 
 function getBy(filter) {
-  return db('users').where(filter).orderBy('id');
+  return db('users').where(filter);
 }
 
 function getById(id) {

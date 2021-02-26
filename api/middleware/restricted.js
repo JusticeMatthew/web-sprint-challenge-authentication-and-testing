@@ -1,14 +1,44 @@
-module.exports = (req, res, next) => {
-  next();
-  /*
-    IMPLEMENT
+const { jwtSecret } = require('../../config/secret');
+const jwt = require('jsonwebtoken');
+const User = require('../users/model');
 
-    1- On valid token in the Authorization header, call next.
-
-    2- On missing token in the Authorization header,
-      the response body should include a string exactly as follows: "token required".
-
-    3- On invalid or expired token in the Authorization header,
-      the response body should include a string exactly as follows: "token invalid".
-  */
+module.exports = {
+  restricted,
+  payloadChecker,
+  validateUser,
 };
+
+function restricted(req, res, next) {
+  const token = req.headers.authorization;
+
+  if (token) {
+    jwt.verify(token, jwtSecret, (error) => {
+      if (error) {
+        res.status(401).json('token invalid');
+      } else {
+        next();
+      }
+    });
+  } else {
+    res.status(401).json('token required');
+  }
+}
+
+function payloadChecker(req, res, next) {
+  if (!req.body.username || !req.body.password) {
+    res.status(400).json('username and password required');
+  } else {
+    next();
+  }
+}
+
+function validateUser(req, res, next) {
+  const { username } = req.body;
+  User.getBy(username)
+    .then(() => {
+      res.status(400).json('username taken');
+    })
+    .catch(() => {
+      next();
+    });
+}
